@@ -116,10 +116,10 @@ async function generateImages() {
       height: h,
     });
     const ctx = canvas.getContext("2d")!;
-    ctx.fillStyle = bgColor.value || `hsl(${randInt(0, 359)}, 80%, 60%)`;
+    ctx.fillStyle = bgColor.value || `hsl(${randInt(0, 359)}, 40%, 85%)`;
     ctx.fillRect(0, 0, w, h);
 
-    ctx.fillStyle = "#fff";
+    ctx.fillStyle = "#000";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.font = `${Math.round(w / 20)}px sans-serif`;
@@ -191,10 +191,12 @@ const cancelGeneration = () => (cancelRequested.value = true);
 </script>
 
 <template>
-  <UContainer class="max-w-6xl mx-auto space-y-12 py-8">
+  <UContainer class="">
     <!-- ───── Hero ───────────────────────────────────────────── -->
-    <div class="text-center space-y-3">
-      <h1 class="text-4xl font-extrabold tracking-tight">Placeholder Forge</h1>
+    <div class="text-center space-y-3 mb-4 mt-4">
+      <h1 class="text-4xl font-extrabold tracking-tight mb-1">
+        Placeholder Forge
+      </h1>
       <p class="text-gray-500 max-w-xl mx-auto">
         Craft colourful placeholder images, sprinkle random EXIF magic, and
         download them one-by-one or zipped together.
@@ -223,6 +225,7 @@ const cancelGeneration = () => (cancelRequested.value = true);
               <UBadge
                 v-for="preset in [5, 25, 50, 100]"
                 :key="preset"
+                class="cursor-pointer"
                 clickable
                 variant="outline"
                 @click="count = preset"
@@ -264,6 +267,7 @@ const cancelGeneration = () => (cancelRequested.value = true);
           <UBadge
             v-for="(size, idx) in landscapeSizes"
             :key="'landscape-' + idx"
+            class="cursor-pointer"
             clickable
             variant="outline"
             @click="setSize(size)"
@@ -279,6 +283,7 @@ const cancelGeneration = () => (cancelRequested.value = true);
           <UBadge
             v-for="(size, idx) in portraitSizes"
             :key="'portrait-' + idx"
+            class="cursor-pointer"
             clickable
             variant="outline"
             @click="setSize(size)"
@@ -406,25 +411,26 @@ const cancelGeneration = () => (cancelRequested.value = true);
         <!-- Tile view -->
         <div
           v-if="!listView && images.length"
-          class="grid grid-cols-2 md:grid-cols-3 gap-4"
+          v-auto-animate
+          class="masonry-grid"
         >
           <div
             v-for="(img, idx) in images"
             :key="img.name"
-            class="relative rounded overflow-hidden shadow"
+            class="masonry-item relative rounded overflow-hidden shadow bg-list"
           >
             <div class="absolute right-2 top-2 z-10 flex gap-1">
               <UButton
-                size="2xs"
-                color="white"
+                size="xs"
+                color="primary"
                 variant="solid"
                 @click="saveBlob(img.blob, img.name)"
               >
                 <UIcon name="i-heroicons-arrow-down-tray" />
               </UButton>
               <UButton
-                size="2xs"
-                color="red"
+                size="xs"
+                color="error"
                 variant="solid"
                 @click="deleteImage(idx)"
               >
@@ -434,46 +440,66 @@ const cancelGeneration = () => (cancelRequested.value = true);
             <img
               :src="img.url"
               :alt="img.name"
-              class="w-full max-h-60 object-contain bg-gray-50"
+              class="w-full max-h-60 object-cover bg-gray-50"
             >
-            <div class="text-xs p-2 truncate">{{ img.name }}</div>
           </div>
         </div>
 
         <!-- List view -->
-        <div v-else-if="listView && images.length" class="space-y-3">
+        <div
+          v-else-if="listView && images.length"
+          v-auto-animate
+          class="space-y-3 overflow-hidden"
+        >
           <div
             v-for="(img, idx) in images"
             :key="img.name"
-            class="flex items-center gap-4 rounded border p-2"
+            class="grid items-center gap-3 rounded bg-list p-2"
+            style="grid-template-columns: auto 1fr auto auto auto"
           >
+            <!-- thumbnail -->
             <img
               :src="img.url"
-              class="w-12 h-12 object-contain bg-gray-50 rounded"
+              class="w-12 h-12 object-cover bg-gray-50 rounded flex-shrink-0"
               :alt="img.name"
             >
-            <div class="flex-1 min-w-0">
+
+            <!-- text (only column that can grow) -->
+            <div class="min-w-0">
               <p class="text-sm truncate">{{ img.name }}</p>
-              <p class="text-xs text-gray-500">
-                {{ img.width }} × {{ img.height }} px
+              <p class="text-xs text-gray-500 flex items-center gap-1">
+                <UIcon
+                  name="i-heroicons-device-phone-mobile"
+                  :class="img.width >= img.height ? 'rotate-90' : ''"
+                />
+                {{ img.width }} × {{ img.height }} px
               </p>
             </div>
-            <UBadge v-if="img.exif" color="primary" variant="subtle"
-              >EXIF</UBadge
+
+            <UBadge
+              v-if="img.exif"
+              color="primary"
+              variant="subtle"
+              class="flex-shrink-0"
             >
+              EXIF
+            </UBadge>
+
             <UButton
               size="xs"
-              color="white"
+              color="primary"
               variant="solid"
-              class="ml-2"
+              class="flex-shrink-0"
               @click="saveBlob(img.blob, img.name)"
             >
               <UIcon name="i-heroicons-arrow-down-tray" />
             </UButton>
+
             <UButton
               size="xs"
-              color="red"
+              color="error"
               variant="solid"
+              class="flex-shrink-0"
               @click="deleteImage(idx)"
             >
               <UIcon name="i-heroicons-trash" />
@@ -508,5 +534,28 @@ img:hover {
 }
 pre {
   font-family: ui-monospace, SFMono-Regular, Consolas, Menlo, monospace;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.bg-list {
+  background: #00000010;
+}
+
+.masonry-grid {
+  column-count: 2;
+  column-gap: 1rem;
+  overflow: hidden;
+}
+@media (min-width: 768px) {
+  .masonry-grid {
+    column-count: 3;
+  }
+}
+.masonry-item {
+  break-inside: avoid;
+  margin-bottom: 1rem;
 }
 </style>
