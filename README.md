@@ -1,6 +1,23 @@
-# Nuxt UI Starter
+# Placeholder Forge
 
-Look at [Nuxt docs](https://nuxt.com/docs/getting-started/introduction) and [Nuxt UI docs](https://ui.nuxt.com) to learn more.
+Placeholder Forge is a web-based tool for generating colorful placeholder images with optional randomized EXIF metadata. It allows users to create images with custom dimensions, background colors, and EXIF data, and download them individually or as a ZIP archive.
+
+## Features
+
+- Generate placeholder images with customizable dimensions and formats (JPEG/PNG).
+- Add randomized EXIF metadata to JPEG images, including GPS and device information.
+- Preview generated images in a gallery (list or tile view).
+- Download images individually or as a ZIP archive.
+- Fully client-side: no data is sent to any server.
+
+## Technologies Used
+
+- **Vue 3** with the Composition API for reactive state management.
+- **Nuxt.js** for streamlined development and deployment.
+- **JSZip** for creating ZIP archives.
+- **piexifjs** for injecting EXIF metadata into JPEG images.
+- **faker.js** for generating random EXIF metadata.
+- **Tailwind CSS** for styling.
 
 ## Setup
 
@@ -38,38 +55,29 @@ yarn dev
 bun run dev
 ```
 
-## Production
+## Usage
 
-Build the application for production:
+1. Open the application in your browser.
+2. Configure the settings:
+   - Number of images to generate.
+   - Random or fixed dimensions.
+   - Image format (JPEG/PNG).
+   - Optional EXIF metadata for JPEG images.
+   - Background color.
+3. Click **Generate** to create the images.
+4. Preview the generated images in the gallery.
+5. Download individual images or export all as a ZIP archive.
 
-```bash
-# npm
-npm run build
+## Disclaimer
 
-# pnpm
-pnpm run build
+Placeholder Forge runs entirely in your browser. Images are painted using the HTML5 canvas, and optional EXIF metadata is injected using `piexifjs`. No files or data ever leave your device.
 
-# yarn
-yarn build
+- **Note**: EXIF metadata is only supported for JPEG images. PNG outputs will not include EXIF data.
 
-# bun
-bun run build
-```
+## License
 
-Locally preview production build:
+This project is licensed under the [MIT License](LICENSE).
 
-```bash
-# npm
-npm run preview
+## Contact
 
-# pnpm
-pnpm run preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+For questions or feedback, please open an issue in the repository.
