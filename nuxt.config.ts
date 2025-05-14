@@ -2,12 +2,15 @@
 export default defineNuxtConfig({
   devtools: { enabled: true },
 
+  ssr:false,
+
   modules: [
     '@nuxt/ui',
     '@nuxt/eslint',
     '@nuxt/fonts',
     '@nuxt/icon',
-    '@nuxt/image'
+    '@nuxt/image',
+    '@formkit/auto-animate/nuxt'
   ],
 
   css: ['~/assets/css/main.css'],
