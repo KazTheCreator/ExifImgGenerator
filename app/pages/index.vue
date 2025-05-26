@@ -440,8 +440,8 @@ const cancelGeneration = () => (cancelRequested.value = true);
             variant="outline"
             :disabled="isGenerating || !images.length"
             @click="downloadZip"
-            >Download ZIP</UButton
-          >
+            >Download ZIP
+          </UButton>
         </div>
 
         <UProgress
@@ -594,7 +594,7 @@ const cancelGeneration = () => (cancelRequested.value = true);
         <p class="text-sm leading-relaxed">
           Placeholder Forge runs entirely in your browser. Images are painted
           with the HTML5 canvas; optional EXIF metadata is injected using
-          <code>piexifjs</code>. No files or data ever leave your device.<br /><br />
+          <code>piexifjs</code>. No files or data ever leave your device.<br ><br >
           <strong>JPEG only:</strong> EXIF is ignored for PNG outputs.
         </p>
       </template>
@@ -603,7 +603,7 @@ const cancelGeneration = () => (cancelRequested.value = true);
     <!-- LICENSE / COPYRIGHT -->
     <p class="mt-4 mb-8 text-xs text-gray-500">
       © 2025 Alexander Müller / KazTheCreator
-      <br />
+      <br >
       MIT LICENSE
     </p>
   </UContainer>
@@ -613,9 +613,11 @@ const cancelGeneration = () => (cancelRequested.value = true);
 img {
   transition: transform 0.2s ease;
 }
+
 img:hover {
   transform: scale(1.05);
 }
+
 pre {
   font-family: ui-monospace, SFMono-Regular, Consolas, Menlo, monospace;
 }
@@ -633,11 +635,13 @@ pre {
   column-gap: 1rem;
   overflow: hidden;
 }
+
 @media (min-width: 768px) {
   .masonry-grid {
     column-count: 3;
   }
 }
+
 .masonry-item {
   break-inside: avoid;
   margin-bottom: 1rem;
