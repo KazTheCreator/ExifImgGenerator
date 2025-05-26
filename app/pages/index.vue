@@ -34,7 +34,7 @@ const isGenerating = ref(false);
 const cancelRequested = ref(false);
 const stepIdx = ref(0);
 
-const macePublicImage = '/mace-cleaned-cropped.png';
+const macePublicImage = "/mace-cleaned-cropped.png";
 
 const statusSteps = [
   "Initializing canvas…",
@@ -84,8 +84,12 @@ const estimatedImageSize = computed(() => targetSize.value || 300 * 1024); // fa
 const maxCountAllowed = computed(() =>
   Math.max(1, Math.floor(MAX_RAM_BYTES / estimatedImageSize.value))
 );
-const totalEstimatedBytes = computed(() => count.value * estimatedImageSize.value);
-const isOverRamLimit = computed(() => totalEstimatedBytes.value > MAX_RAM_BYTES);
+const totalEstimatedBytes = computed(
+  () => count.value * estimatedImageSize.value
+);
+const isOverRamLimit = computed(
+  () => totalEstimatedBytes.value > MAX_RAM_BYTES
+);
 
 /* ─── helpers ─────────────────────────────────────────────────────── */
 const randInt = (min: number, max: number) =>
@@ -268,11 +272,18 @@ const cancelGeneration = () => (cancelRequested.value = true);
             <div class="text-xs text-gray-500">
               Max allowed: {{ maxCountAllowed }} (based on target file size)
             </div>
-            <div v-if="isOverRamLimit" class="text-xs text-red-600 font-semibold">
-              ⚠️ Total estimated RAM usage ({{ (totalEstimatedBytes / (1024*1024)).toFixed(1) }} MB) exceeds 500 MB limit!
+            <div
+              v-if="isOverRamLimit"
+              class="text-xs text-red-600 font-semibold"
+            >
+              ⚠️ Total estimated RAM usage ({{
+                (totalEstimatedBytes / (1024 * 1024)).toFixed(1)
+              }}
+              MB) exceeds 500 MB limit!
             </div>
             <div v-else class="text-xs text-gray-500">
-              Estimated RAM usage: {{ (totalEstimatedBytes / (1024*1024)).toFixed(1) }} MB
+              Estimated RAM usage:
+              {{ (totalEstimatedBytes / (1024 * 1024)).toFixed(1) }} MB
             </div>
             <!-- quick presets -->
             <div class="flex gap-2 flex-wrap">
@@ -577,16 +588,24 @@ const cancelGeneration = () => (cancelRequested.value = true);
     <!-- Disclaimer -->
     <UAccordion
       :items="[{ label: 'ℹ️  About & Disclaimer', description: 'Details' }]"
+      class="mt-8 mb-8"
     >
       <template #content>
         <p class="text-sm leading-relaxed">
           Placeholder Forge runs entirely in your browser. Images are painted
           with the HTML5 canvas; optional EXIF metadata is injected using
-          <code>piexifjs</code>. No files or data ever leave your device.<br ><br >
+          <code>piexifjs</code>. No files or data ever leave your device.<br /><br />
           <strong>JPEG only:</strong> EXIF is ignored for PNG outputs.
         </p>
       </template>
     </UAccordion>
+
+    <!-- LICENSE / COPYRIGHT -->
+    <p class="mt-4 mb-8 text-xs text-gray-500">
+      © 2025 Alexander Müller / KazTheCreator
+      <br />
+      MIT LICENSE
+    </p>
   </UContainer>
 </template>
 
