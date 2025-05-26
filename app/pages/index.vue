@@ -34,7 +34,7 @@ const isGenerating = ref(false);
 const cancelRequested = ref(false);
 const stepIdx = ref(0);
 
-const macePublicImage = '/mace-cleaned-cropped.png';
+const macePublicImage = "/mace-cleaned-cropped.png";
 
 const statusSteps = [
   "Initializing canvas…",
@@ -84,8 +84,12 @@ const estimatedImageSize = computed(() => targetSize.value || 300 * 1024); // fa
 const maxCountAllowed = computed(() =>
   Math.max(1, Math.floor(MAX_RAM_BYTES / estimatedImageSize.value))
 );
-const totalEstimatedBytes = computed(() => count.value * estimatedImageSize.value);
-const isOverRamLimit = computed(() => totalEstimatedBytes.value > MAX_RAM_BYTES);
+const totalEstimatedBytes = computed(
+  () => count.value * estimatedImageSize.value
+);
+const isOverRamLimit = computed(
+  () => totalEstimatedBytes.value > MAX_RAM_BYTES
+);
 
 /* ─── helpers ─────────────────────────────────────────────────────── */
 const randInt = (min: number, max: number) =>
@@ -268,11 +272,18 @@ const cancelGeneration = () => (cancelRequested.value = true);
             <div class="text-xs text-gray-500">
               Max allowed: {{ maxCountAllowed }} (based on target file size)
             </div>
-            <div v-if="isOverRamLimit" class="text-xs text-red-600 font-semibold">
-              ⚠️ Total estimated RAM usage ({{ (totalEstimatedBytes / (1024*1024)).toFixed(1) }} MB) exceeds 500 MB limit!
+            <div
+              v-if="isOverRamLimit"
+              class="text-xs text-red-600 font-semibold"
+            >
+              ⚠️ Total estimated RAM usage ({{
+                (totalEstimatedBytes / (1024 * 1024)).toFixed(1)
+              }}
+              MB) exceeds 500 MB limit!
             </div>
             <div v-else class="text-xs text-gray-500">
-              Estimated RAM usage: {{ (totalEstimatedBytes / (1024*1024)).toFixed(1) }} MB
+              Estimated RAM usage:
+              {{ (totalEstimatedBytes / (1024 * 1024)).toFixed(1) }} MB
             </div>
             <!-- quick presets -->
             <div class="flex gap-2 flex-wrap">
@@ -429,8 +440,8 @@ const cancelGeneration = () => (cancelRequested.value = true);
             variant="outline"
             :disabled="isGenerating || !images.length"
             @click="downloadZip"
-            >Download ZIP</UButton
-          >
+            >Download ZIP
+          </UButton>
         </div>
 
         <UProgress
@@ -577,6 +588,7 @@ const cancelGeneration = () => (cancelRequested.value = true);
     <!-- Disclaimer -->
     <UAccordion
       :items="[{ label: 'ℹ️  About & Disclaimer', description: 'Details' }]"
+      class="mt-8 mb-8"
     >
       <template #content>
         <p class="text-sm leading-relaxed">
@@ -587,6 +599,13 @@ const cancelGeneration = () => (cancelRequested.value = true);
         </p>
       </template>
     </UAccordion>
+
+    <!-- LICENSE / COPYRIGHT -->
+    <p class="mt-4 mb-8 text-xs text-gray-500">
+      © 2025 Alexander Müller / KazTheCreator
+      <br >
+      MIT LICENSE
+    </p>
   </UContainer>
 </template>
 
@@ -594,9 +613,11 @@ const cancelGeneration = () => (cancelRequested.value = true);
 img {
   transition: transform 0.2s ease;
 }
+
 img:hover {
   transform: scale(1.05);
 }
+
 pre {
   font-family: ui-monospace, SFMono-Regular, Consolas, Menlo, monospace;
 }
@@ -614,11 +635,13 @@ pre {
   column-gap: 1rem;
   overflow: hidden;
 }
+
 @media (min-width: 768px) {
   .masonry-grid {
     column-count: 3;
   }
 }
+
 .masonry-item {
   break-inside: avoid;
   margin-bottom: 1rem;
