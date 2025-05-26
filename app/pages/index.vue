@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed, watch } from "vue";
 import JSZip from "jszip";
 import piexif from "piexifjs";
 import { faker } from "@faker-js/faker";
+
+/* ─── constants ──────────────────────────────────────────────── */
+const MAX_RAM_BYTES = 500 * 1024 * 1024; // 500 MB
 
 /* ─── reactive state ──────────────────────────────────────────────── */
 const count = ref(1);
@@ -17,11 +20,21 @@ const height = ref(1080);
 const withExif = ref(false);
 const bgColor = ref<string>("");
 
+const targetSize = ref(0); // 0 = auto, else bytes
+const targetSizeItems = [
+  { label: "Auto", value: 0 },
+  { label: "1 MB", value: 1 * 1024 * 1024 },
+  { label: "5 MB", value: 5 * 1024 * 1024 },
+  { label: "10 MB", value: 10 * 1024 * 1024 },
+];
+
 const listView = ref(true);
 
 const isGenerating = ref(false);
 const cancelRequested = ref(false);
 const stepIdx = ref(0);
+
+const macePublicImage = '/mace-cleaned-cropped.png';
 
 const statusSteps = [
   "Initializing canvas…",
@@ -66,6 +79,14 @@ type GenImg = {
 };
 const images = ref<GenImg[]>([]);
 
+/* ─── RAM safeguard logic ────────────────────────────────────────── */
+const estimatedImageSize = computed(() => targetSize.value || 300 * 1024); // fallback: 300KB per image if auto
+const maxCountAllowed = computed(() =>
+  Math.max(1, Math.floor(MAX_RAM_BYTES / estimatedImageSize.value))
+);
+const totalEstimatedBytes = computed(() => count.value * estimatedImageSize.value);
+const isOverRamLimit = computed(() => totalEstimatedBytes.value > MAX_RAM_BYTES);
+
 /* ─── helpers ─────────────────────────────────────────────────────── */
 const randInt = (min: number, max: number) =>
   Math.floor(Math.random() * (max - min + 1)) + min;
@@ -96,8 +117,17 @@ const saveBlob = (blob: Blob, filename: string) => {
 
 const deleteImage = (idx: number) => images.value.splice(idx, 1);
 
+// Inflate blob to target size by appending dummy data
+function inflateBlob(blob: Blob, targetBytes: number): Promise<Blob> {
+  if (!targetBytes || blob.size >= targetBytes) return Promise.resolve(blob);
+  const padSize = targetBytes - blob.size;
+  const pad = new Uint8Array(padSize).fill(0);
+  return Promise.resolve(new Blob([blob, pad], { type: blob.type }));
+}
+
 /* ─── generation logic ────────────────────────────────────────────── */
 async function generateImages() {
+  if (isOverRamLimit.value) return;
   stepIdx.value = 0;
   isGenerating.value = true;
   cancelRequested.value = false;
@@ -164,7 +194,9 @@ async function generateImages() {
       dataURL = piexif.insert(piexif.dump(exifObj), dataURL);
     }
 
-    const blob = await (await fetch(dataURL)).blob();
+    let blob = await (await fetch(dataURL)).blob();
+    blob = await inflateBlob(blob, targetSize.value);
+
     images.value.push({
       name: `image_${i + 1}_${uuid}_${w}x${h}.${format.value}`,
       blob,
@@ -180,6 +212,14 @@ async function generateImages() {
   isGenerating.value = false;
 }
 
+/* ─── Watchers to enforce max count ──────────────────────────────── */
+watch([targetSize, count], () => {
+  if (count.value > maxCountAllowed.value) {
+    count.value = maxCountAllowed.value;
+  }
+});
+
+/* ─── Download & misc ────────────────────────────────────────────── */
 const downloadZip = async () => {
   const zip = new JSZip();
   images.value.forEach((i) => zip.file(i.name, i.blob));
@@ -197,6 +237,11 @@ const cancelGeneration = () => (cancelRequested.value = true);
       <h1 class="text-4xl font-extrabold tracking-tight mb-1">
         Placeholder Forge
       </h1>
+      <!-- <NuxtImg
+        :src="macePublicImage"
+        class=""
+        alt="Placeholder Forge logo"
+      /> -->
       <p class="text-gray-500 max-w-xl mx-auto">
         Craft colourful placeholder images, sprinkle random EXIF magic, and
         download them one-by-one or zipped together.
@@ -215,11 +260,20 @@ const cancelGeneration = () => (cancelRequested.value = true);
               v-model.number="count"
               type="number"
               :min="1"
-              :max="100"
+              :max="maxCountAllowed"
               size="lg"
               class="w-full"
               :disabled="isGenerating"
             />
+            <div class="text-xs text-gray-500">
+              Max allowed: {{ maxCountAllowed }} (based on target file size)
+            </div>
+            <div v-if="isOverRamLimit" class="text-xs text-red-600 font-semibold">
+              ⚠️ Total estimated RAM usage ({{ (totalEstimatedBytes / (1024*1024)).toFixed(1) }} MB) exceeds 500 MB limit!
+            </div>
+            <div v-else class="text-xs text-gray-500">
+              Estimated RAM usage: {{ (totalEstimatedBytes / (1024*1024)).toFixed(1) }} MB
+            </div>
             <!-- quick presets -->
             <div class="flex gap-2 flex-wrap">
               <UBadge
@@ -228,7 +282,7 @@ const cancelGeneration = () => (cancelRequested.value = true);
                 class="cursor-pointer"
                 clickable
                 variant="outline"
-                @click="count = preset"
+                @click="count = Math.min(preset, maxCountAllowed)"
               >
                 {{ preset }}
               </UBadge>
@@ -292,6 +346,7 @@ const cancelGeneration = () => (cancelRequested.value = true);
             {{ size[0] }} × {{ size[1] }}
           </UBadge>
         </div>
+
         <UFormField label="Image format" class="mt-4">
           <URadioGroup
             v-model="format"
@@ -347,11 +402,19 @@ const cancelGeneration = () => (cancelRequested.value = true);
           </template>
         </UFormField>
 
+        <UFormField label="Target file size" class="mt-4">
+          <URadioGroup
+            v-model="targetSize"
+            :items="targetSizeItems"
+            :disabled="isGenerating"
+          />
+        </UFormField>
+
         <!-- actions -->
         <div class="flex gap-4 mt-6">
           <UButton
             color="primary"
-            :disabled="isGenerating"
+            :disabled="isGenerating || isOverRamLimit"
             @click="generateImages"
             >Generate</UButton
           >
@@ -437,11 +500,12 @@ const cancelGeneration = () => (cancelRequested.value = true);
                 <UIcon name="i-heroicons-trash" />
               </UButton>
             </div>
-            <img
+            <NuxtImg
               :src="img.url"
               :alt="img.name"
               class="w-full max-h-60 object-cover bg-gray-50"
-            >
+              loading="lazy"
+            />
           </div>
         </div>
 
@@ -458,11 +522,12 @@ const cancelGeneration = () => (cancelRequested.value = true);
             style="grid-template-columns: auto 1fr auto auto auto"
           >
             <!-- thumbnail -->
-            <img
+            <NuxtImg
               :src="img.url"
               class="w-12 h-12 object-cover bg-gray-50 rounded flex-shrink-0"
               :alt="img.name"
-            >
+              loading="lazy"
+            />
 
             <!-- text (only column that can grow) -->
             <div class="min-w-0">
